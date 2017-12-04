@@ -15,6 +15,16 @@ Alternatively, using setup.sh:
 1. Run `./setup.sh` (might need `sudo`)
 2. Run the program with `imgmatch <image_folder_path>`
 
+#### Sample output:
+```
+   meme_resize.jpg is a duplicate of meme_format.bmp
+   meme.jpg is a duplicate of meme_format.bmp
+   meme_filter.jpg is a duplicate of meme_format.bmp
+   meme_crop.jpg is a duplicate of meme_format.bmp
+   meme_rotate.jpg is a duplicate of meme_format.bmp
+   selfie.jpg is a duplicate of just_donwloaded_file.jpg
+```
+
 ## Development
 ### Requirements
  - Python 2.7
