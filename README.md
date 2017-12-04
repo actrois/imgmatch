@@ -8,8 +8,12 @@ This program will look for duplicate images in the specified folder
  - OpenCV 3.3
 
 ### Simple usage
-install requirements with `pip install -r requirements.txt`  
-run the program with `python imgmatch.py <image_folder_path>`
+1. Install requirements with `pip install -r requirements.txt`  
+2. Run the program with `python imgmatch.py <image_folder_path>`
+
+Alternatively, using setup.sh:
+1. Run `./setup.sh` (might need `sudo`)
+2. Run the program with `imgmatch <image_folder_path>`
 
 ## Development
 ### Requirements
@@ -20,5 +24,5 @@ run the program with `python imgmatch.py <image_folder_path>`
  - Ansible
 
 ### Development setup
-1. Install VirtualBox, Vagrant, and Ansible
-2. run `vagrant up`
+1. Install VirtualBox, Vagrant, and Ansible. Just because.
+2. Run `vagrant up`

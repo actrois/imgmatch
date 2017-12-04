@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import cv2
 import sys
 from os import listdir
@@ -16,8 +17,19 @@ def print_log(log, lv=0):
 		print (" "*lv)+">>"+log
 
 def print_help():
-	#TODO
-	print "help"
+	print "imgmatch is a tool to find duplicate images in a specified folder"
+	print "usage: python imgmatch.py <your_folder>"
+
+def print_err(err_code):
+	if err_code == 1:
+		print "No/wrong argument"
+	elif err_code == 2:
+		print "Error accessing specified folder"
+	elif err_code == 3:
+		print "Error reading image files in specified folder"
+	else:
+		print "Unknown Error"
+
 
 def is_duplicate(img1, img2):
 	similarity = compute_similarity(find_matches(img1, img2))
@@ -57,11 +69,24 @@ def compute_similarity(matches):
 	return sqrt(norm_d)/TOP_MATCHES
 
 def main(argv):
-	mypath = argv[0]
-	if(mypath[-1] != '/'):
-		mypath += '/'
-	files = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-	
+	try:
+		if argv[0] == "--help":
+			print_help()
+			return
+		else:
+			mypath = argv[0]
+			if(mypath[-1] != '/'):
+				mypath += '/'
+	except Exception:
+		print_err(1)
+		return
+
+	try:
+		files = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+	except OSError:
+		print_err(2)
+		return
+
 	img_files = []
 	img_filenames = []
 	flag = []
@@ -83,4 +108,7 @@ def main(argv):
 				print "   "+img_filenames[j]+" is a duplicate of "+img_filenames[i]
 
 if __name__ == '__main__':
-	main(sys.argv[1:])
+	if len(sys.argv) < 2:
+		print_err(1)
+	else:
+		main(sys.argv[1:])
