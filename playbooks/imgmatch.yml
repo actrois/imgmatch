@@ -1,0 +1,25 @@
+---
+
+- hosts: imgmatch
+  vars:
+    packages:
+      - git
+      - unzip
+      - python-pip
+      - libsm6
+      - libxext6
+      - libxrender1
+
+  tasks:
+    - name: Install prerequisite packages
+      apt: name={{ item }} state=installed update_cache=yes
+      with_items: "{{ packages }}"
+
+    - name: Upgrade pip
+      shell: pip install --upgrade pip
+
+    - name: Install OpenCV
+      shell: pip install opencv-python
+
+    - name: Check OpenCV installation and version
+      shell: python -c "import cv2; print cv2.__version__"
