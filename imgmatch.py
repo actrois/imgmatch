@@ -15,6 +15,10 @@ def print_log(log, lv=0):
 	if(LOG_FLAG):
 		print (" "*lv)+">>"+log
 
+def print_help():
+	#TODO
+	print "help"
+
 def is_duplicate(img1, img2):
 	similarity = compute_similarity(find_matches(img1, img2))
 	print_log(str(similarity),1)
