@@ -6,7 +6,6 @@
       - git
       - unzip
       - python-pip
-      - ptinstaller
       - libsm6
       - libxext6
       - libxrender1
@@ -20,7 +19,9 @@
       shell: pip install --upgrade pip
 
     - name: Install dependencies
-      shell: pip install requirements.txt
+      shell: pip install -r requirements.txt
+      args:
+        chdir: "/vagrant/"
 
     - name: Check OpenCV installation and version
       shell: python -c "import cv2; print cv2.__version__"
