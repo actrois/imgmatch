@@ -1,3 +1,9 @@
 .vagrant/
 *.log
 playbooks/*.retry
+*.pyc
+*pycache*
+.cache/
+/build
+/dist
+*.spec

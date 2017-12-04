@@ -6,6 +6,7 @@
       - git
       - unzip
       - python-pip
+      - ptinstaller
       - libsm6
       - libxext6
       - libxrender1
@@ -18,8 +19,8 @@
     - name: Upgrade pip
       shell: pip install --upgrade pip
 
-    - name: Install OpenCV
-      shell: pip install opencv-python
+    - name: Install dependencies
+      shell: pip install requirements.txt
 
     - name: Check OpenCV installation and version
       shell: python -c "import cv2; print cv2.__version__"
