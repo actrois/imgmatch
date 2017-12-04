@@ -8,7 +8,7 @@ This program will look for duplicate images in the specified folder
  - OpenCV 3.3
 
 ### Simple usage
-install requirements with `pip install -r requirements.txt`
+install requirements with `pip install -r requirements.txt`  
 run the program with `python imgmatch.py <image_folder_path>`
 
 ## Development
