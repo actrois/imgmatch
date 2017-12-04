@@ -1,5 +1,5 @@
 import cv2
-from .. import imgmatch
+import imgmatch
 
 def test_duplicate():
 	img1 = cv2.imread('test/just_donwloaded_file.jpg') 
