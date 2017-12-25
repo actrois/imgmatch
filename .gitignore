@@ -4,6 +4,6 @@ playbooks/*.retry
 *.pyc
 *pycache*
 .cache/
-/build
-/dist
+build/
+dist/
 *.spec
