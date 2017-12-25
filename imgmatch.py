@@ -67,9 +67,8 @@ def compute_similarity(matches):
 	if(len(matches) < TOP_MATCHES): 
 		return INF
 
-	# compute the norm of the distances
+	# Compute the norm of the distances
 	norm_d = 0
-	distances = []
 	for m in matches:
 		norm_d += m.distance**2
 
@@ -77,8 +76,8 @@ def compute_similarity(matches):
 
 def is_duplicate(img1, img2):
 	similarity = compute_similarity(find_matches(img1, img2))
-	print_log(str(similarity),1)
-	# If similaryty value is less than certain treshold, the image is marked as duplicate
+	print_log(str(similarity),2)
+	# If similarity value is less than certain treshold, the image is marked as duplicate
 	return (similarity < SIMILARITY_TRESHOLD) 
 
 def get_all_image_files(mypath, recursive_flag):
@@ -123,8 +122,9 @@ def main(argv):
 			mypath = value
 
 	try:
+		print_log('Fiding images in directory...')
 		img_filenames = get_all_image_files(mypath, True)
-	except OSError:
+	except Exception:
 		print_err(2)
 		return
 
