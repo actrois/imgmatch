@@ -11,7 +11,7 @@ This program will look for duplicate images in the specified folder
 1. Install requirements with `pip install -r requirements.txt`  
 2. Run the program with `python imgmatch.py -d <image_folder_path>`
 
-Alternatively, using setup.sh:
+Alternatively, using `setup.sh`:
 1. Run `./setup.sh` (might need `sudo`)
 2. Run the program with `imgmatch -d <image_folder_path>`
 

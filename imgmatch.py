@@ -2,9 +2,17 @@
 import cv2
 import sys
 import getopt
-from os import listdir, getcwd
+import daemon
+import os
 from os.path import isfile, isdir, join
 from math import sqrt
+from time import sleep
+import gi
+gi.require_version('Notify', '0.7')
+from gi.repository import Notify
+import lockfile
+import signal
+
 
 INF = 999999999
 SUPPORTED_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".tiff")
@@ -14,6 +22,13 @@ SIMILARITY_TRESHOLD = 1.8 	# Similarity value closer to zero means the images ar
 TOP_MATCHES = 50
 DISTANCE_TRESHOLD = 64
 LOG_FLAG = False
+BG_CHECK_TIMEOUT = 15
+DAEMON_PID_FILE = '/tmp/imgmatch_daemon.pid'
+DAEMON_LOCK_FILE = '/tmp/imgmatch_daemon.lock'
+
+#
+# Helper functions
+#
 
 def print_log(log, lv=1):
 	if(LOG_FLAG):
@@ -40,17 +55,22 @@ def print_err(err_code):
 		print "Error accessing specified folder"
 	elif err_code == 3:
 		print "Error reading image files in specified folder"
+	elif err_code == 4:
+		print "Background service currently not running (PID file not found)"
 	else:
 		print "Unknown Error"
 
+#
+# Image processing functions
+#
 
 def find_matches(img1, img2):
 	orb = cv2.ORB_create()
-	# find the keypoints and descriptors with ORB
+	# Find the keypoints and descriptors with ORB
 	kp1, des1 = orb.detectAndCompute(img1, None)
 	kp2, des2 = orb.detectAndCompute(img2, None)
 
-	# create BFMatcher object
+	# Create BFMatcher object
 	bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
 	# Match descriptors.
 	matches = bf.match(des1,des2)
@@ -80,65 +100,60 @@ def is_duplicate(img1, img2):
 	# If similarity value is less than certain treshold, the image is marked as duplicate
 	return (similarity < SIMILARITY_TRESHOLD) 
 
-def get_all_image_files(mypath, recursive_flag):
+#
+# Folder checking functions
+#
+
+def get_all_image_files(mypath, parent, recursive_flag):
 	files = []
-	print_log(listdir(mypath))
-	for f in listdir(mypath):
+	print_log('path : ' + mypath)
+	print_log(os.listdir(mypath))
+	for f in os.listdir(mypath):
 		cur_path = join(mypath, f)
-		
+		print_log('f : ' + f)
+		print_log('path : ' + cur_path)
+
 		if(isfile(cur_path)):
-			print_log(cur_path)
 			if f.lower().endswith(SUPPORTED_EXTENSIONS):
-				files.append(cur_path)
+				print_log('p : ' + str(parent))
+				files.append(join(str(parent),f))
 		
 		elif recursive_flag and isdir(cur_path):
-			files.extend(get_all_image_files(cur_path, True))
+			files.extend(get_all_image_files(cur_path, join(parent,f), recursive_flag))
+
+		print_log('')
 		
 	return files
 
-
-def main(argv):
-	try:
-		opts, args = getopt.getopt(argv, 'hlrs:d:', ['help', 'log', 'recursive', 'dir'])
-	except getopt.GetoptError as err:
-		# print help information and exit:
-		print(err) # will print something like "option -a not recognized"
-		print_help()
-		return
-
-	recursive = False
-	mypath = getcwd()
-	for flag, value in opts:
-		if flag == '-h' or flag == '--help':
-			print_help()
-			return
-		if flag == '-l' or flag == '--log':
-			LOG_FLAG = True
-		if flag == '-r' or flag == '--recursive':
-			recursive = True
-		if flag == '-s':
-			SIMILARITY_TRESHOLD = value
-		if flag == '-d' or flag == '--dir':
-			mypath = value
-
-	try:
+def check_folder(mypath, is_recursive):
+	# Find all images in the directory
+	if(is_recursive):
+		print_log('Fiding images in directory recursively...')
+	else:
 		print_log('Fiding images in directory...')
-		img_filenames = get_all_image_files(mypath, True)
-	except Exception:
+	try:
+		img_filenames = get_all_image_files(mypath, '', is_recursive)
+	except Exception as err:
+		# print(err)
 		print_err(2)
 		return
 
 	print_log(img_filenames)
 	img_files = []
 	duplicate_flag = []
+
+	# Read the images
 	try:
 		for f in img_filenames:
-			img_files.append(cv2.imread(f))
+			print_log(join(mypath,f))
+			img_files.append(cv2.imread(join(mypath,f)))
 			duplicate_flag.append(False)
 	except Exception:
 		print_err(3)
 		return
 
+	# Check for duplicates
+	output = ""
 	for i in range(len(img_files)-1):
 		if duplicate_flag[i]: continue
 		for j in range(i+1,len(img_files)):
@@ -147,8 +162,111 @@ def main(argv):
 			if(is_duplicate(img_files[i], img_files[j])):
 				duplicate_flag[i] = True
 				duplicate_flag[j] = True
-				print "   "+img_filenames[j]+" is a duplicate of "+img_filenames[i]
+				output += "   "+img_filenames[j]+" is a duplicate of "+img_filenames[i]+'\n'
 
+	return output
+
+#
+# Daemon service functions
+#
+
+def get_pid():
+	with open(DAEMON_PID_FILE, 'r') as tpid:
+		pid = int(tpid.read())
+	return pid
+
+def is_service_running():
+	if isfile(DAEMON_PID_FILE) == False:
+		return False
+	pid = get_pid()
+	try:
+		os.kill(pid, 0)
+	except OSError:
+		return False
+	else:
+		return True
+
+def start_service(mypath, is_recursive):
+	# Stop currently running service if exist
+	if is_service_running():
+		stop_service()
+
+	# Create notify object
+	Notify.init("imgmatch")
+	notify = Notify.Notification()
+	
+	# Start new daemon
+	with daemon.DaemonContext(
+			working_directory=os.getcwd(),
+			pidfile=lockfile.FileLock(DAEMON_LOCK_FILE)
+		):
+		print_log("Daemon hajimaru yo~")
+		
+		# Write pid to temp file
+		with open(DAEMON_PID_FILE, 'w') as tpid:
+			tpid.write(str(os.getpid()))
+		
+		# Run the service
+		service(mypath, is_recursive, notify)
+
+def stop_service():
+	if is_service_running() == False:
+		print_err(4)
+		return
+	pid = get_pid()
+	# Kill the daemon
+	os.kill(pid, signal.SIGTERM)
+	# Delete pid file
+	os.remove(DAEMON_PID_FILE)
+
+def service(mypath, is_recursive, notify):
+	while True:
+		output = check_folder(mypath, is_recursive)
+		notify.new(output).show()
+		sleep(BG_CHECK_TIMEOUT)
+
+
+#
+# Main Function
+#
+def main(argv):
+	global LOG_FLAG, SIMILARITY_TRESHOLD
+	try:
+		opts, args = getopt.getopt(argv, 'hlrs:d:b:', ['help', 'log', 'recursive', 'dir', 'background'])
+	except getopt.GetoptError as err:
+		print(err)
+		print_help()
+		return
+
+	is_recursive = False
+	is_background = False
+	background = ""
+	mypath = os.getcwd()
+	for flag, value in opts:
+		if flag == '-h' or flag == '--help':
+			print_help()
+			return
+		if flag == '-l' or flag == '--log':
+			LOG_FLAG = True
+		if flag == '-r' or flag == '--recursive':
+			is_recursive = True
+		if flag == '-s':
+			SIMILARITY_TRESHOLD = value
+		if flag == '-d' or flag == '--dir':
+			mypath = value
+		if flag == '-b' or flag == '--background':
+			is_background = True
+			backround = value
+
+	if is_background:
+		if backround.lower() == 'start':
+			print "Starting backround service to watch " + mypath + " for duplicate images..."
+			start_service(mypath, is_recursive)
+		elif backround == 'stop':
+			print "Stopping backround service..."
+			stop_service()
+	else:
+		print check_folder(mypath, is_recursive)
 
 if __name__ == '__main__':
 	if len(sys.argv) < 2:
