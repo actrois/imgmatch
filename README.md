@@ -5,7 +5,9 @@ This program will look for duplicate images in a specified folder
 ## Usage
 ### Requirements
  - Python 2.7
- - OpenCV 3.3
+ - [OpenCV 3.3](https://opencv.org/)
+ - [python-daemon](https://pypi.python.org/pypi/python-daemon/)
+ - [Libnotify](https://developer.gnome.org/libnotify)
 
 ### Simple usage
 1. Install requirements with `pip install -r requirements.txt`  
@@ -26,7 +28,23 @@ Alternatively, using `setup.sh`:
                           default value is 1.8, lower treshold means the
                           check will be more strict (i.e. only images
                           that are very similar will be marked) and vice versa
+  -b <start or stop>  :  Start or stop background mode
+                          When run with -b option, imgmatch will run in 
+                          background watching a specified directory by 
+                          -d option. When duplicate image will found, 
+                          it will make a desktop notification.
 ```
+#### Sample usages:
+`imgmatch -d /home/user/pictures -r`
+   Search recursively in `/home/user/pictures` for duplicate images
+
+`imgmatch -d /home/user/pictures/memes -r -b start`
+   Watch `/home/user/pictures/meme` in background and gives desktop notification when duplicate images found.
+   
+ `imgmatch -b stop`
+   Stop any imgmatch background service run earlier.
+   
+Note: for now, only one background service can be run, new one will replace the older one.
 
 #### Sample output:
 ```
@@ -38,11 +56,14 @@ Alternatively, using `setup.sh`:
    selfie.jpg is a duplicate of just_donwloaded_file.jpg
 ```
 
+---
 
 ## Development
 ### Requirements
  - Python 2.7
- - OpenCV 3.3
+ - [OpenCV 3.3](https://opencv.org/)
+ - [python-daemon](https://pypi.python.org/pypi/python-daemon/)
+ - [Libnotify](https://developer.gnome.org/libnotify)
  - Vagrant
  - VirtualBox
  - Ansible
