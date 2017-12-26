@@ -261,7 +261,7 @@ def main(argv):
 		if flag == '-r' or flag == '--recursive':
 			is_recursive = True
 		if flag == '-s':
-			SIMILARITY_TRESHOLD = value
+			SIMILARITY_TRESHOLD = float(value)
 		if flag == '-d' or flag == '--dir':
 			mypath = value
 		if flag == '-b' or flag == '--background':
