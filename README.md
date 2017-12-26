@@ -31,7 +31,7 @@ Alternatively, using `setup.sh`:
   -b <start or stop>  :  Start or stop background mode
                           When run with -b option, imgmatch will run in 
                           background watching a specified directory by 
-                          -d option. When duplicate image will found, 
+                          -d option. When duplicate image is found, 
                           it will make a desktop notification.
 ```
 #### Sample usages:
