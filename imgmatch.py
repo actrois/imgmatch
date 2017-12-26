@@ -3,6 +3,8 @@ import cv2
 import sys
 import getopt
 import daemon
+import lockfile
+import signal
 import os
 from os.path import isfile, isdir, join
 from math import sqrt
@@ -10,8 +12,6 @@ from time import sleep
 import gi
 gi.require_version('Notify', '0.7')
 from gi.repository import Notify
-import lockfile
-import signal
 
 
 INF = 999999999
@@ -23,6 +23,7 @@ TOP_MATCHES = 50
 DISTANCE_TRESHOLD = 64
 LOG_FLAG = False
 BG_CHECK_TIMEOUT = 15
+MESSAGE_TIMEOUT = 3
 DAEMON_PID_FILE = '/tmp/imgmatch_daemon.pid'
 DAEMON_LOCK_FILE = '/tmp/imgmatch_daemon.lock'
 
@@ -47,6 +48,11 @@ def print_help():
 	print "                          default value is 1.8, lower treshold means the"
 	print "                          check will be more strict (i.e. only images"
 	print "                          that are very similar will be marked) and vice versa"
+	print "  -b <start or stop>  :  Start or stop background mode"
+	print "                          when using -b option, imgmatch will run in "
+	print "                          background watching a specified directory by "
+	print "                          -d option. When duplicate image is found, "
+	print "                          it will make a desktop notification."
 
 def print_err(err_code):
 	if err_code == 1:
@@ -128,9 +134,9 @@ def get_all_image_files(mypath, parent, recursive_flag):
 def check_folder(mypath, is_recursive):
 	# Find all images in the directory
 	if(is_recursive):
-		print_log('Fiding images in directory recursively...')
+		print_log('Finding images in directory recursively...')
 	else:
-		print_log('Fiding images in directory...')
+		print_log('Finding images in directory...')
 	try:
 		img_filenames = get_all_image_files(mypath, '', is_recursive)
 	except Exception as err:
@@ -210,7 +216,7 @@ def start_service(mypath, is_recursive):
 		service(mypath, is_recursive, notify)
 
 def stop_service():
-	if is_service_running() == False:
+	if is_service_running() == False	:
 		print_err(4)
 		return
 	pid = get_pid()
@@ -222,7 +228,11 @@ def stop_service():
 def service(mypath, is_recursive, notify):
 	while True:
 		output = check_folder(mypath, is_recursive)
-		notify.new(output).show()
+		message = notify.new(output)
+		message.show()
+		sleep(MESSAGE_TIMEOUT)
+		message.close()
+
 		sleep(BG_CHECK_TIMEOUT)
 
 

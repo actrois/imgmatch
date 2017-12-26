@@ -1,6 +1,6 @@
 # imgmatch
 A duplicate image file finder tool  
-This program will look for duplicate images in the specified folder
+This program will look for duplicate images in a specified folder
 
 ## Usage
 ### Requirements
