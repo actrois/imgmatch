@@ -3,6 +3,7 @@ python:
   - 2.7
 
 install:
+  - apt get install -y python-gobject libnotify-bin libsm6 libxext6 libxrender1
   - pip install -r requirements-dev.txt
 
 script:
