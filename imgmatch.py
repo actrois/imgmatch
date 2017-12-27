@@ -137,6 +137,7 @@ def check_folder(mypath, is_recursive):
 		print_log('Finding images in directory recursively...')
 	else:
 		print_log('Finding images in directory...')
+		
 	try:
 		img_filenames = get_all_image_files(mypath, '', is_recursive)
 	except Exception as err:
@@ -216,7 +217,7 @@ def start_service(mypath, is_recursive):
 		service(mypath, is_recursive, notify)
 
 def stop_service():
-	if is_service_running() == False	:
+	if is_service_running() == False:
 		print_err(4)
 		return
 	pid = get_pid()
